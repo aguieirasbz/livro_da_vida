@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Livro da Vida - Player</title>
+  <title>Admin - Olhar Rubro-Negro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: Arial, sans-serif; background:#0f0f0f; color:#fff; }
@@ -38,6 +38,9 @@
     <input type="hidden" id="editingIndex" value="-1">
     <button id="saveBtn" class="btn btn-edit">Salvar Vídeo</button>
     <button id="cancelBtn" class="btn btn-delete">Cancelar</button>
+    
+    <button id="exportBtn" class="btn w-full mt-2" style="background:#22c55e; color:white;">Exportar videos.json</button>
+
   </section>
 
   <section>
@@ -48,6 +51,8 @@
 </div>
 
 <script>
+  // ATUALIZADO: Script com função de exportar
+
   const STORAGE_KEY = 'olhar_rubro_negro_videos';
   const tituloInput = document.getElementById('titulo');
   const videoIdInput = document.getElementById('videoId');
@@ -55,6 +60,7 @@
   const saveBtn = document.getElementById('saveBtn');
   const cancelBtn = document.getElementById('cancelBtn');
   const videosList = document.getElementById('videosList');
+  const exportBtn = document.getElementById('exportBtn'); // Pega o novo botão
 
   function loadVideos(){
     try{
@@ -141,6 +147,29 @@
     videoIdInput.value = '';
     editingIndex.value = '-1';
   }
+
+  // --- NOVO CÓDIGO DE EXPORTAÇÃO ---
+  exportBtn.addEventListener('click', () => {
+    // 1. Carrega os vídeos do localStorage
+    const videos = loadVideos();
+    
+    // 2. Converte a lista para uma string JSON formatada
+    const jsonString = JSON.stringify(videos, null, 2); // (null, 2) deixa o arquivo bonito e legível
+    
+    // 3. Cria um "Blob" (um arquivo em memória)
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    
+    // 4. Cria um link temporário para fazer o download
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'videos.json'; // Este é o nome do arquivo que será baixado
+    
+    // 5. Simula um clique no link para iniciar o download
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+  // --- FIM DO NOVO CÓDIGO ---
 
   // Inicializa lista
   renderList();
