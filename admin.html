@@ -1,74 +1,74 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gerenciar Canais - Clube Infantil</title>
+  <title>Gerenciar Canais — Livro da Vida</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&display=swap" rel="stylesheet" />
-  <style>body{font-family:'Baloo 2',system-ui,Arial;} .card{box-shadow:0 6px 18px rgba(16,55,92,0.08)}</style>
+  <style>body{font-family:'Baloo 2',system-ui,Arial;background:#f6fbff;color:#10375C}</style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-  <header class="bg-gradient-to-r from-yellow-400 to-sky-400 py-4 mb-6">
-    <div class="max-w-5xl mx-auto px-4 flex items-center justify-between">
-      <h1 class="text-2xl text-white font-bold">Gerenciar Canais</h1>
-      <a href="index.html" class="text-white underline">Voltar à página</a>
-    </div>
-  </header>
+<body class="min-h-screen">
+  <div class="max-w-4xl mx-auto p-6">
+    <header class="mb-6">
+      <h1 class="text-2xl font-bold">Gerenciar Canais</h1>
+      <p class="text-sm text-gray-600">Adicione, edite, importe ou exporte a lista de canais. Campos opcionais: thumbnail, videoId, playlistId.</p>
+      <div class="mt-2"><a href="index.html" class="text-sm text-blue-600 underline">Voltar para a página principal</a></div>
+    </header>
 
-  <main class="max-w-5xl mx-auto px-4">
-    <section class="grid gap-6 lg:grid-cols-2">
-      <div class="bg-white p-4 rounded-xl card">
-        <h2 class="font-semibold mb-2">Adicionar / Editar Canal</h2>
-        <form id="channel-form" class="space-y-3">
-          <input type="hidden" id="channel-index" />
-          <div>
-            <label class="text-sm">Categoria</label>
-            <select id="channel-category" class="w-full border rounded px-2 py-1">
-              <option value="infantil">Infantil</option>
-              <option value="evangelico">Evangélico</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-sm">Nome do Canal</label>
-            <input id="channel-name" class="w-full border rounded px-2 py-1" required />
-          </div>
-          <div>
-            <label class="text-sm">Descrição (opcional)</label>
-            <input id="channel-desc" class="w-full border rounded px-2 py-1" />
-          </div>
-          <div>
-            <label class="text-sm">Thumbnail URL (opcional)</label>
-            <input id="channel-thumb" class="w-full border rounded px-2 py-1" placeholder="https://..." />
-          </div>
-          <div class="flex gap-2">
-            <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Salvar</button>
-            <button type="button" id="clear-form" class="bg-gray-100 px-3 py-1 rounded">Limpar</button>
-          </div>
-        </form>
-      </div>
+    <section class="bg-white rounded-xl p-4 shadow mb-6">
+      <form id="channel-form" class="grid gap-3">
+        <input type="hidden" id="editing-index" value="-1" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input id="name" required placeholder="Nome do canal" class="p-2 border rounded" />
+          <select id="category" class="p-2 border rounded">
+            <option value="infantil">Infantil</option>
+            <option value="evangelico">Evangélico</option>
+          </select>
+        </div>
+        <input id="desc" placeholder="Descrição curta" class="p-2 border rounded" />
+        <input id="thumb" placeholder="URL da thumbnail (opcional)" class="p-2 border rounded" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input id="videoId" placeholder="videoId (ex.: dQw4w9WgXcQ) — embute vídeo" class="p-2 border rounded" />
+          <input id="playlistId" placeholder="playlistId — embute playlist" class="p-2 border rounded" />
+        </div>
 
-      <div class="bg-white p-4 rounded-xl card">
-        <h2 class="font-semibold mb-2">Ações</h2>
-        <div class="space-y-2">
-          <button id="export-json" class="w-full bg-green-500 text-white px-3 py-2 rounded">Exportar JSON</button>
-          <label class="w-full block">
-            <span class="text-sm text-gray-600">Importar JSON</span>
-            <input type="file" id="import-file" accept="application/json" class="mt-1" />
+        <div class="flex gap-2">
+          <button id="save-btn" class="px-4 py-2 bg-blue-600 text-white rounded">Salvar canal</button>
+          <button id="cancel-edit" type="button" class="px-4 py-2 bg-gray-200 rounded">Cancelar</button>
+          <button id="reset-defaults" type="button" class="ml-auto px-3 py-2 bg-yellow-100 rounded text-sm">Resetar para padrões</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="bg-white rounded-xl p-4 shadow mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-semibold">Lista de canais</h2>
+        <div class="flex items-center gap-2">
+          <button id="export-json" class="px-3 py-2 bg-green-600 text-white rounded text-sm">Exportar JSON</button>
+          <label class="px-3 py-2 bg-gray-100 rounded text-sm cursor-pointer">
+            Importar JSON
+            <input id="import-file" type="file" accept=".json,application/json" class="hidden" />
           </label>
-          <button id="reset-defaults" class="w-full bg-red-100 text-red-700 px-3 py-2 rounded">Resetar para padrões</button>
         </div>
       </div>
+
+      <div id="channels-list" class="space-y-2 text-sm"></div>
     </section>
 
-    <section class="mt-6">
-      <h2 class="text-lg font-semibold mb-3">Canais cadastrados</h2>
-      <div id="channels-list" class="grid gap-3"></div>
+    <section class="text-xs text-gray-600">
+      <p class="mb-1"><strong>Observações:</strong></p>
+      <ul class="list-disc ml-5 space-y-1">
+        <li>Se fornecer videoId ou playlistId, o vídeo/playlist será embutido na página principal ao clicar no card.</li>
+        <li>Se não fornecer videoId/playlistId, o card abre pesquisa do YouTube como fallback.</li>
+        <li>Importar JSON substitui a lista atual. O arquivo deve ser um array de objetos: [{name,category,desc,thumb,videoId,playlistId}, ...]</li>
+      </ul>
     </section>
-  </main>
+  </div>
 
   <script>
-    // Mesmos padrões que index.html
+    const STORAGE_KEY = 'livro_da_vida_channels';
     const defaultChannels = [
       { category: 'infantil', name: 'Galinha Pintadinha', desc: 'Músicas e vídeos infantis animados' },
       { category: 'infantil', name: 'Mundo Bita', desc: 'Canal com músicas educativas e personagens' },
@@ -80,138 +80,147 @@
       { category: 'evangelico', name: 'Canal Infantil Cristão', desc: 'Canal com conteúdo cristão para pequenos' }
     ];
 
-    const STORAGE_KEY = 'livro_da_vida_channels';
-
-    function readChannels(){
+    function loadChannels(){
       try{
         const raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw) return defaultChannels.slice();
+        if(!raw) return structuredClone(defaultChannels);
         const parsed = JSON.parse(raw);
-        if(!Array.isArray(parsed)) return defaultChannels.slice();
-        return parsed;
-      }catch(e){
-        console.warn('Erro ao ler storage', e);
-        return defaultChannels.slice();
-      }
+        return Array.isArray(parsed) ? parsed : structuredClone(defaultChannels);
+      }catch(e){ console.warn(e); return structuredClone(defaultChannels); }
     }
 
     function saveChannels(list){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list, null, 2));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      populateList();
     }
 
-    function renderList(){
-      const container = document.getElementById('channels-list');
-      container.innerHTML = '';
-      const list = readChannels();
-      list.forEach((ch, idx) => {
+    // UI helpers
+    const form = document.getElementById('channel-form');
+    const fields = { name: document.getElementById('name'), category: document.getElementById('category'), desc: document.getElementById('desc'), thumb: document.getElementById('thumb'), videoId: document.getElementById('videoId'), playlistId: document.getElementById('playlistId') };
+    const editingIndex = document.getElementById('editing-index');
+    const channelsListEl = document.getElementById('channels-list');
+
+    function clearForm(){
+      form.reset();
+      editingIndex.value = '-1';
+    }
+
+    function populateList(){
+      const channels = loadChannels();
+      channelsListEl.innerHTML = '';
+      if(channels.length === 0){ channelsListEl.innerHTML = '<div class="text-gray-500">Nenhum canal cadastrado.</div>'; return; }
+      channels.forEach((ch, i) => {
         const el = document.createElement('div');
-        el.className = 'p-3 bg-white rounded-lg flex items-center justify-between';
+        el.className = 'p-2 border rounded flex items-start gap-3';
         el.innerHTML = `
-          <div>
-            <div class="font-semibold">${ch.name} <span class="text-xs text-gray-500">(${ch.category})</span></div>
-            <div class="text-sm text-gray-600">${ch.desc||''}</div>
+          <div class="w-14 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+            ${ch.thumb ? `<img src="${escapeHtml(ch.thumb)}" alt="" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-xs text-gray-500">${escapeHtml(ch.name)}</div>`}
           </div>
-          <div class="flex gap-2">
-            <button data-edit="${idx}" class="edit-btn bg-yellow-100 px-2 py-1 rounded text-sm">Editar</button>
-            <button data-del="${idx}" class="del-btn bg-red-100 px-2 py-1 rounded text-sm">Excluir</button>
+          <div class="flex-1">
+            <div class="font-semibold">${escapeHtml(ch.name)} <span class="text-xs text-gray-400">(${escapeHtml(ch.category)})</span></div>
+            <div class="text-xs text-gray-600">${escapeHtml(ch.desc || '')}</div>
+            <div class="text-xs text-gray-500 mt-1">videoId: ${escapeHtml(ch.videoId || '-') } • playlistId: ${escapeHtml(ch.playlistId || '-')}</div>
+          </div>
+          <div class="flex flex-col gap-2">
+            <button data-action="edit" data-index="${i}" class="px-2 py-1 bg-blue-600 text-white text-xs rounded">Editar</button>
+            <button data-action="delete" data-index="${i}" class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Excluir</button>
           </div>`;
-        container.appendChild(el);
+        channelsListEl.appendChild(el);
       });
-
-      // attach handlers
-      document.querySelectorAll('.edit-btn').forEach(b=> b.addEventListener('click', e=>{
-        const i = Number(e.currentTarget.getAttribute('data-edit'));
-        const list = readChannels();
-        const ch = list[i];
-        document.getElementById('channel-index').value = i;
-        document.getElementById('channel-category').value = ch.category || 'infantil';
-        document.getElementById('channel-name').value = ch.name || '';
-        document.getElementById('channel-desc').value = ch.desc || '';
-        document.getElementById('channel-thumb').value = ch.thumbnailUrl || '';
-      }));
-
-      document.querySelectorAll('.del-btn').forEach(b=> b.addEventListener('click', e=>{
-        const i = Number(e.currentTarget.getAttribute('data-del'));
-        const list = readChannels();
-        if(confirm('Excluir canal: ' + list[i].name + '?')){
-          list.splice(i,1);
-          saveChannels(list);
-          renderList();
-        }
-      }));
     }
 
-    document.getElementById('channel-form').addEventListener('submit', (ev)=>{
-      ev.preventDefault();
-      const idx = document.getElementById('channel-index').value;
-      const category = document.getElementById('channel-category').value;
-      const name = document.getElementById('channel-name').value.trim();
-      const desc = document.getElementById('channel-desc').value.trim();
-      const thumb = document.getElementById('channel-thumb').value.trim();
-      if(!name){ alert('Informe o nome do canal'); return; }
-      const list = readChannels();
-      const item = { category, name, desc };
-      if(thumb) item.thumbnailUrl = thumb;
-      if(idx === ''){
-        list.push(item);
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // Form submit - add or update
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const list = loadChannels();
+      const item = { category: fields.category.value, name: fields.name.value.trim(), desc: fields.desc.value.trim(), thumb: fields.thumb.value.trim(), videoId: fields.videoId.value.trim(), playlistId: fields.playlistId.value.trim() };
+      const idx = Number(editingIndex.value);
+      if(idx >= 0){
+        list[idx] = item;
       }else{
-        list[Number(idx)] = item;
+        list.push(item);
       }
       saveChannels(list);
-      renderList();
-      document.getElementById('channel-form').reset();
-      document.getElementById('channel-index').value = '';
+      clearForm();
     });
 
-    document.getElementById('clear-form').addEventListener('click', ()=>{
-      document.getElementById('channel-form').reset();
-      document.getElementById('channel-index').value = '';
+    // Clicks on edit/delete
+    channelsListEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      const action = btn.dataset.action;
+      const idx = Number(btn.dataset.index);
+      const list = loadChannels();
+      if(action === 'delete'){
+        if(!confirm('Excluir este canal?')) return;
+        list.splice(idx,1);
+        saveChannels(list);
+      }else if(action === 'edit'){
+        const ch = list[idx];
+        fields.name.value = ch.name || '';
+        fields.category.value = ch.category || 'infantil';
+        fields.desc.value = ch.desc || '';
+        fields.thumb.value = ch.thumb || '';
+        fields.videoId.value = ch.videoId || '';
+        fields.playlistId.value = ch.playlistId || '';
+        editingIndex.value = String(idx);
+        window.scrollTo({top:0,behavior:'smooth'});
+      }
     });
 
-    document.getElementById('export-json').addEventListener('click', ()=>{
-      const list = readChannels();
-      const blob = new Blob([JSON.stringify(list, null, 2)], {type:'application/json'});
+    // Cancel edit
+    document.getElementById('cancel-edit').addEventListener('click', (e) => { e.preventDefault(); clearForm(); });
+
+    // Export JSON
+    document.getElementById('export-json').addEventListener('click', () => {
+      const data = JSON.stringify(loadChannels(), null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'canais_clube_infantil.json';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      a.href = url; a.download = 'livro_da_vida_canais.json';
+      document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(url);
     });
 
-    document.getElementById('import-file').addEventListener('change', (ev)=>{
-      const file = ev.target.files[0];
-      if(!file) return;
+    // Import JSON
+    document.getElementById('import-file').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if(!f) return;
       const reader = new FileReader();
       reader.onload = () => {
         try{
           const parsed = JSON.parse(reader.result);
-          if(!Array.isArray(parsed)) throw new Error('JSON inválido: não é um array');
-          if(confirm('Substituir a lista atual pelos dados importados?')){
-            saveChannels(parsed);
-            renderList();
-            alert('Importação concluída');
-          }
-        }catch(e){
-          alert('Erro ao importar JSON: ' + e.message);
-        }
+          if(!Array.isArray(parsed)) throw new Error('Arquivo inválido: deve ser um array.');
+          if(!confirm('Importar substituirá a lista atual. Continuar?')) return;
+          saveChannels(parsed.map(sanitizeChannel));
+          alert('Importação concluída.');
+        }catch(err){ alert('Erro ao importar JSON: ' + (err.message||err)); }
       };
-      reader.readAsText(file);
-      // limpa o input
-      ev.target.value = '';
+      reader.readAsText(f);
+      e.target.value = '';
     });
 
-    document.getElementById('reset-defaults').addEventListener('click', ()=>{
-      if(confirm('Resetar para os canais padrões? Isso substituirá a lista atual.')){
-        saveChannels(defaultChannels.slice());
-        renderList();
-      }
+    function sanitizeChannel(src){
+      return {
+        category: src.category === 'evangelico' ? 'evangelico' : 'infantil',
+        name: String(src.name||'').trim(),
+        desc: String(src.desc||'').trim(),
+        thumb: String(src.thumb||'').trim(),
+        videoId: String(src.videoId||'').trim(),
+        playlistId: String(src.playlistId||'').trim()
+      };
+    }
+
+    // Reset to defaults
+    document.getElementById('reset-defaults').addEventListener('click', () => {
+      if(!confirm('Restaurar os canais padrão? Isso substituirá a lista atual.')) return;
+      saveChannels(structuredClone(defaultChannels));
     });
 
-    // inicializa
-    renderList();
+    // Init
+    populateList();
   </script>
 </body>
 </html>
