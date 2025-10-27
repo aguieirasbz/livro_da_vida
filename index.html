@@ -1,3 +1,185 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Clube Infantil — Canais</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      body { font-family: 'Baloo 2', system-ui, -apple-system, 'Segoe UI', Roboto, Arial; background: #f0f8ff; color: #10375C; }
+      /* small helpers for non-tailwind parts */
+      .card-hover{ transition: transform .18s, box-shadow .18s; }
+      .card-hover:hover{ transform: translateY(-6px); box-shadow: 0 12px 30px rgba(16,55,92,0.08); }
+      /* modal centering */
+      .modal-open { display: flex !important; }
+    </style>
+  </head>
+  <body>
+    <header class="bg-gradient-to-r from-yellow-400 to-sky-400 p-4 sticky top-0 z-40">
+      <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">📺</div>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-white">Clube Infantil</h1>
+            <div class="text-xs text-white/90">Canais Infantis e Evangélicos — supervisão parental</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="admin.html" class="text-white text-sm underline">Gerenciar canais</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4">
+      <p class="text-sm text-slate-600 mb-4">Selecione um canal. Se o canal tiver <code>videoId</code> ou <code>playlistId</code>, o player será embutido na página.</p>
+
+      <div class="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        <!-- Player area -->
+        <section class="lg:col-span-2 bg-white rounded-2xl p-4 shadow-sm">
+          <div id="panel-art" class="rounded-xl bg-gradient-to-tr from-[#fff6e6] to-[#e6f7ff] p-4 flex flex-col gap-3 items-start">
+            <div id="panel-name" class="text-2xl font-bold">Selecione um canal</div>
+            <div id="panel-desc" class="text-sm text-slate-600">Clique num card à direita para ver/abrir o canal.</div>
+            <div id="panel-embed" class="w-full mt-3 bg-black/5 rounded-lg overflow-hidden">
+              <!-- small placeholder area or embedded iframe will appear here -->
+              <div class="w-full aspect-video flex items-center justify-center text-slate-500">Nenhum vídeo selecionado</div>
+            </div>
+            <div class="mt-3">
+              <button id="open-channel" class="text-white bg-gradient-to-r from-sky-500 to-blue-400 px-3 py-2 rounded-md">Abrir no YouTube / Reproduzir</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sidebar: channels list -->
+        <aside class="bg-white rounded-2xl p-4 shadow-sm">
+          <h2 class="font-semibold mb-3">Canais</h2>
+          <div id="channels-list" class="space-y-3 max-h-[70vh] overflow-y-auto"></div>
+        </aside>
+      </div>
+    </main>
+
+    <!-- Modal for larger playback -->
+    <div id="player-modal" class="hidden fixed inset-0 bg-black/70 z-50 items-center justify-center p-4">
+      <div class="bg-white rounded-xl overflow-hidden w-full max-w-4xl shadow-lg">
+        <div class="flex items-center justify-between p-3 border-b">
+          <div id="modal-title" class="font-semibold">Reproduzindo</div>
+          <button id="modal-close" class="text-sm text-slate-600 px-3 py-1">Fechar ✕</button>
+        </div>
+        <div id="modal-body" class="p-0 bg-black"></div>
+      </div>
+    </div>
+
+    <footer class="max-w-6xl mx-auto p-4 text-center text-xs text-slate-500">Conteúdo hospedado no YouTube — acompanhe as crianças.</footer>
+
+    <script>
+      // Storage key used by admin.html
+      const STORAGE_KEY = 'livro_da_vida_channels';
+
+      const defaultChannels = [
+        { category: 'infantil', name: 'Galinha Pintadinha', desc: 'Músicas e vídeos infantis animados' },
+        { category: 'infantil', name: 'Mundo Bita', desc: 'Canal com músicas educativas e personagens' },
+        { category: 'infantil', name: 'Turma da Mônica', desc: 'Histórias e músicas da Turma da Mônica' },
+        { category: 'infantil', name: 'Peppa Pig Brasil', desc: 'Episódios e músicas da Peppa' },
+      ];
+
+      function loadChannels(){
+        try{
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if(!raw) return defaultChannels.slice();
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : defaultChannels.slice();
+        }catch(e){ console.warn('Erro lendo canais:', e); return defaultChannels.slice(); }
+      }
+
+      function placeholderThumb(name){
+        return `https://via.placeholder.com/480x270/ffd166/08324a?text=${encodeURIComponent(name)}`;
+      }
+
+      function createChannelCard(ch, index){
+        const el = document.createElement('div');
+        el.className = 'flex items-center gap-3 p-2 rounded-lg card-hover cursor-pointer';
+        el.innerHTML = `
+          <img src="${ch.thumbnailUrl || placeholderThumb(ch.name)}" alt="${ch.name}" class="w-24 h-14 object-cover rounded-md" />
+          <div class="flex-1">
+            <div class="font-semibold">${escapeHtml(ch.name)}</div>
+            <div class="text-xs text-slate-500">${escapeHtml(ch.desc || '')}</div>
+            <div class="text-[11px] text-slate-400 mt-1">${ch.videoId ? 'videoId' : ch.playlistId ? 'playlist' : 'buscar'}</div>
+          </div>`;
+
+        el.addEventListener('click', () => selectChannel(ch));
+        return el;
+      }
+
+      function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+      function populateList(){
+        const list = loadChannels();
+        const container = document.getElementById('channels-list');
+        container.innerHTML = '';
+        if(list.length === 0){ container.innerHTML = '<div class="text-sm text-slate-500">Nenhum canal cadastrado. Use Gerenciar canais.</div>'; return; }
+        list.forEach((ch,i)=> container.appendChild(createChannelCard(ch,i)));
+      }
+
+      function buildEmbed(channel, small=false){
+        if(channel.videoId){
+          const src = `https://www.youtube.com/embed/${encodeURIComponent(channel.videoId)}?rel=0${small ? '' : '&autoplay=1'}`;
+          return `<iframe src="${src}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        }
+        if(channel.playlistId){
+          const src = `https://www.youtube.com/embed?listType=playlist&list=${encodeURIComponent(channel.playlistId)}&rel=0${small ? '' : '&autoplay=1'}`;
+          return `<iframe src="${src}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        }
+        return `<div class="w-full aspect-video flex items-center justify-center text-slate-500">Nenhum vídeo embutido disponível</div>`;
+      }
+
+      // currently selected channel
+      window.currentChannel = null;
+
+      function selectChannel(ch){
+        window.currentChannel = ch;
+        document.getElementById('panel-name').textContent = ch.name;
+        document.getElementById('panel-desc').textContent = ch.desc || '';
+        const embed = buildEmbed(ch, true);
+        const panelEmbed = document.getElementById('panel-embed');
+        panelEmbed.innerHTML = `<div class="w-full aspect-video">${embed}</div>`;
+        // update open button href behavior
+        const openBtn = document.getElementById('open-channel');
+        if(ch.videoId) openBtn.dataset.href = `https://www.youtube.com/watch?v=${encodeURIComponent(ch.videoId)}`;
+        else if(ch.playlistId) openBtn.dataset.href = `https://www.youtube.com/playlist?list=${encodeURIComponent(ch.playlistId)}`;
+        else openBtn.dataset.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(ch.name)}`;
+      }
+
+      // modal behavior
+      function showModal(){
+        const ch = window.currentChannel;
+        if(!ch) return alert('Selecione um canal primeiro.');
+        // if channel has embeddable id, show modal; otherwise open new tab
+        if(ch.videoId || ch.playlistId){
+          const modal = document.getElementById('player-modal');
+          const body = document.getElementById('modal-body');
+          body.innerHTML = buildEmbed(ch, false);
+          document.getElementById('modal-title').textContent = ch.name;
+          modal.classList.remove('hidden'); modal.classList.add('modal-open');
+        }else{
+          window.open(document.getElementById('open-channel').dataset.href, '_blank', 'noopener');
+        }
+      }
+      function closeModal(){
+        const modal = document.getElementById('player-modal');
+        document.getElementById('modal-body').innerHTML = '';
+        modal.classList.remove('modal-open'); modal.classList.add('hidden');
+      }
+
+      // wire events
+      document.addEventListener('DOMContentLoaded', ()=>{
+        populateList();
+        document.getElementById('open-channel').addEventListener('click', (e)=>{ e.preventDefault(); showModal(); });
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        document.getElementById('player-modal').addEventListener('click', (ev)=>{ if(ev.target.id === 'player-modal') closeModal(); });
+      });
+    </script>
+  </body>
+</html>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -20,28 +202,57 @@
   header .header-text h1 { font-size:2rem; font-weight:bold; text-shadow: 2px 2px 6px rgba(0,0,0,0.5); }
   header .header-text p { font-size:1rem; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); }
 </style>
-</head>
-<body>
+    :root{
+      --bg: #F6F8FF;
+      --card: #FFFFFF;
+      --accent: #FFB703;
+      --accent-2: #8EC5FF;
+      --text: #10375C;
+    }
+    body{
+      font-family: 'Baloo 2', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: linear-gradient(180deg, #f8fcff 0%, var(--bg) 100%);
+      color: var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    /* Layout mobile-first: coluna em telas pequenas */
+    .main-grid{ display: grid; grid-template-columns: 1fr; }
+    .logo-box{ background: rgba(255,255,255,0.15); backdrop-filter: blur(4px); }
+    .kid-card{ transition: transform .18s ease, box-shadow .18s ease; }
+    .kid-card:hover{ transform: translateY(-6px); box-shadow: 0 12px 30px rgba(16,55,92,0.12); }
+    .section-title{ font-size: 1.05rem; font-weight:700; color: #08324a; }
+    .small-note{ font-size: .95rem; color: #214E66; }
+    .open-btn{ background: linear-gradient(90deg,#2b9af3,#5ad6ff); }
 
-<header>
-  <img src="https://i.ibb.co/8r2nZfX/canais-infantis-bg.jpg" alt="Canais Infantis">
-  <div class="header-text">
-    <h1>Livro da Vida</h1>
-    <p>Canais Infantis Selecionados</p>
-  </div>
-</header>
+    /* Container adjustments (used earlier layout) */
+    .container{ display:flex; flex-direction:column; gap:12px; padding:0 12px; }
+    .player{ order:1 }
+    .sidebar{ order:2; max-height:none; }
 
-<div class="container">
-  <div class="player">
-    <div id="main-player" class="w-full aspect-video bg-black flex items-center justify-center rounded-lg shadow-lg">
-      <span>Selecione vídeo à direita</span>
-    </div>
-  </div>
-  <div class="sidebar" id="videos-sidebar"></div>
-</div>
+  /* Thumbnails and cards responsive */
+  .video-thumb{ display:flex; align-items:center; gap:12px; }
+  .video-thumb img{ width:120px; height:67px; object-fit:cover; border-radius:8px; }
+  .video-info{ font-size:0.95rem; }
 
-<script>
-const STORAGE_KEY = 'olhar_rubro_negro_videos';
+    /* Header text scaling */
+    header .header-text h1{ font-size:1.6rem; }
+    header .header-text p{ font-size:0.95rem; }
+
+    /* Modal tweaks */
+    #player-modal .aspect-video iframe{ height:60vh; }
+
+    /* Desktop and larger tablets */
+    @media (min-width: 768px){
+      .main-grid{ grid-template-columns: 2fr 1fr; }
+      .container{ flex-direction:row; max-width:1200px; margin:20px auto; }
+      .sidebar{ max-height:80vh; overflow-y:auto; }
+      header .header-text h1{ font-size:2rem; }
+      .video-thumb img{ width:140px; height:78px; }
+    }
+    @media (min-width: 1024px){
+      .section-title{ font-size: 1.15rem; }
+    }
 const playerDiv = document.getElementById('main-player');
 const sidebar = document.getElementById('videos-sidebar');
 

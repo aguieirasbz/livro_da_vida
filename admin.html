@@ -1,148 +1,194 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!doctype html>
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin - Livro da Vida</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gerenciar Canais — Livro da Vida</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { font-family: Arial, sans-serif; background:#0f0f0f; color:#fff; }
-    header { background:#006eff; padding:15px; text-align:center; font-size:1.5rem; font-weight:bold; margin-bottom:20px; }
-    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-    input, button { font-size: 1rem; }
-    .video-item { display: flex; justify-content: space-between; gap:10px; background:#1c1c1c; padding:8px; border-radius:8px; margin-bottom:10px; align-items:center; }
-    .video-item img { width:120px; height:67px; border-radius:5px; }
-    .video-info { flex:1; margin-left:10px; }
-    .btn { padding:5px 10px; border-radius:5px; cursor:pointer; }
-    .btn-edit { background:#3b82f6; color:white; }
-    .btn-delete { background:#ef4444; color:white; }
-    .form-group { margin-bottom:10px; display:flex; flex-direction:column; gap:5px; }
-  </style>
+  <style>body{font-family:'Baloo 2',system-ui,Arial;background:#f6fbff;color:#10375C}</style>
 </head>
-<body>
+<body class="min-h-screen">
 
-<header>Admin - Gerenciar Vídeos</header>
+<header class="bg-gradient-to-r from-yellow-400 to-sky-400 py-4 mb-6">
+  <div class="max-w-5xl mx-auto px-4 flex items-center justify-between">
+    <h1 class="text-2xl text-white font-bold">Gerenciar Canais</h1>
+    <a href="index.html" class="text-white underline">Voltar à página</a>
+  </div>
+</header>
 
-<div class="container">
-
-  <section class="mb-6">
-    <h2 class="text-xl font-bold mb-2">Adicionar / Editar Vídeo</h2>
-    <div class="form-group">
-      <label>Título:</label>
-      <input type="text" id="titulo" class="p-2 rounded text-black" placeholder="Título do vídeo">
+<main class="max-w-5xl mx-auto px-4">
+  <section class="grid gap-6 lg:grid-cols-2">
+    <div class="bg-white p-4 rounded-xl shadow">
+      <h2 class="font-semibold mb-2">Adicionar / Editar Canal</h2>
+      <form id="channel-form" class="space-y-3">
+        <input type="hidden" id="channel-index" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input id="channel-name" required placeholder="Nome do canal" class="p-2 border rounded w-full" />
+          <select id="channel-category" class="p-2 border rounded w-full">
+            <option value="infantil">Infantil</option>
+            <option value="evangelico">Evangélico</option>
+          </select>
+        </div>
+        <input id="channel-desc" placeholder="Descrição (opcional)" class="p-2 border rounded w-full" />
+        <input id="channel-thumb" placeholder="Thumbnail URL (opcional)" class="p-2 border rounded w-full" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input id="channel-videoId" placeholder="videoId (opcional)" class="p-2 border rounded w-full" />
+          <input id="channel-playlistId" placeholder="playlistId (opcional)" class="p-2 border rounded w-full" />
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button type="submit" id="save-btn" class="w-full sm:w-auto px-4 py-3 bg-blue-600 text-white rounded">Salvar</button>
+          <button type="button" id="clear-form" class="w-full sm:w-auto px-4 py-3 bg-gray-100 rounded">Limpar</button>
+          <button type="button" id="reset-defaults" class="w-full sm:ml-auto sm:w-auto px-3 py-3 bg-yellow-100 rounded text-sm">Resetar para padrões</button>
+        </div>
+      </form>
     </div>
-    <div class="form-group">
-      <label>ID do YouTube:</label>
-      <input type="text" id="videoId" class="p-2 rounded text-black" placeholder="Ex: dQw4w9WgXcQ">
+
+    <div class="bg-white p-4 rounded-xl shadow">
+      <h2 class="font-semibold mb-2">Ações</h2>
+      <div class="space-y-2">
+        <button id="export-json" class="w-full bg-green-500 text-white px-3 py-2 rounded">Exportar JSON</button>
+        <label class="w-full block">
+          <span class="text-sm text-gray-600">Importar JSON</span>
+          <input type="file" id="import-file" accept="application/json" class="mt-1 w-full" />
+        </label>
+      </div>
     </div>
-    <input type="hidden" id="editingIndex" value="-1">
-    <button id="saveBtn" class="btn btn-edit">Salvar Vídeo</button>
-    <button id="cancelBtn" class="btn btn-delete">Cancelar</button>
   </section>
 
-  <section>
-    <h2 class="text-xl font-bold mb-2">Lista de Vídeos</h2>
-    <div id="videosList"></div>
+  <section class="mt-6">
+    <h2 class="text-lg font-semibold mb-3">Canais cadastrados</h2>
+    <div id="channels-list" class="grid gap-3"></div>
   </section>
-
-</div>
+</main>
 
 <script>
-  const STORAGE_KEY = 'olhar_rubro_negro_videos';
-  const tituloInput = document.getElementById('titulo');
-  const videoIdInput = document.getElementById('videoId');
-  const editingIndex = document.getElementById('editingIndex');
-  const saveBtn = document.getElementById('saveBtn');
-  const cancelBtn = document.getElementById('cancelBtn');
-  const videosList = document.getElementById('videosList');
+  const STORAGE_KEY = 'livro_da_vida_channels';
 
-  function loadVideos(){
+  const defaultChannels = [
+    { category: 'infantil', name: 'Galinha Pintadinha', desc: 'Músicas e vídeos infantis animados' },
+    { category: 'infantil', name: 'Mundo Bita', desc: 'Canal com músicas educativas e personagens' },
+    { category: 'infantil', name: 'Turma da Mônica', desc: 'Histórias e músicas da Turma da Mônica' },
+    { category: 'infantil', name: 'Peppa Pig Brasil', desc: 'Episódios e músicas da Peppa' },
+    { category: 'evangelico', name: 'Canções Gospel Infantís', desc: 'Músicas cristãs para crianças (busca)' }
+  ];
+
+  function loadChannels(){
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return [];
+      if(!raw) return defaultChannels.slice();
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    }catch(e){ console.warn(e); return []; }
+      return Array.isArray(parsed) ? parsed : defaultChannels.slice();
+    }catch(e){ console.warn(e); return defaultChannels.slice(); }
   }
 
-  function saveVideos(videos){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
+  function saveChannels(list){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list, null, 2));
     renderList();
   }
 
+  // elements
+  const form = document.getElementById('channel-form');
+  const fields = {
+    name: document.getElementById('channel-name'),
+    category: document.getElementById('channel-category'),
+    desc: document.getElementById('channel-desc'),
+    thumb: document.getElementById('channel-thumb'),
+    videoId: document.getElementById('channel-videoId'),
+    playlistId: document.getElementById('channel-playlistId')
+  };
+  const indexInput = document.getElementById('channel-index');
+  const channelsListEl = document.getElementById('channels-list');
+
+  function escapeHtml(s){ return String(s||'').replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
   function renderList(){
-    const videos = loadVideos();
-    videosList.innerHTML = '';
-    if(videos.length===0){
-      videosList.innerHTML = '<p>Nenhum vídeo cadastrado.</p>';
-      return;
-    }
-    videos.forEach((v,i)=>{
-      const div = document.createElement('div');
-      div.className = 'video-item';
-      div.innerHTML = `
-        <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg">
-        <div class="video-info">
-          <div>${v.titulo}</div>
-          <div class="text-sm text-gray-400">ID: ${v.id}</div>
+    const list = loadChannels();
+    channelsListEl.innerHTML = '';
+    if(list.length===0){ channelsListEl.innerHTML = '<div class="text-sm text-gray-500">Nenhum canal cadastrado.</div>'; return; }
+    list.forEach((ch, i)=>{
+      const item = document.createElement('div');
+      item.className = 'p-3 bg-white rounded-lg flex flex-col sm:flex-row gap-3 items-start';
+      item.innerHTML = `
+        <div class="w-full sm:w-36 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+          ${ch.thumbnailUrl ? `<img src="${escapeHtml(ch.thumbnailUrl)}" alt="" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-xs text-gray-500">${escapeHtml(ch.name)}</div>`}
         </div>
-        <div class="flex gap-2">
-          <button class="btn btn-edit" data-index="${i}" data-action="edit">Editar</button>
-          <button class="btn btn-delete" data-index="${i}" data-action="delete">Excluir</button>
+        <div class="flex-1">
+          <div class="font-semibold">${escapeHtml(ch.name)} <span class="text-xs text-gray-400">(${escapeHtml(ch.category)})</span></div>
+          <div class="text-sm text-gray-600">${escapeHtml(ch.desc||'')}</div>
+          <div class="text-xs text-gray-500 mt-1">videoId: ${escapeHtml(ch.videoId||'-')} • playlistId: ${escapeHtml(ch.playlistId||'-')}</div>
         </div>
-      `;
-      videosList.appendChild(div);
+        <div class="flex flex-col sm:flex-col gap-2 w-full sm:w-auto">
+          <button data-edit="${i}" class="w-full sm:w-auto px-3 py-2 bg-yellow-100 rounded text-sm">Editar</button>
+          <button data-del="${i}" class="w-full sm:w-auto px-3 py-2 bg-red-100 text-red-700 rounded text-sm">Excluir</button>
+        </div>`;
+      channelsListEl.appendChild(item);
     });
-  }
 
-  saveBtn.addEventListener('click', ()=>{
-    const titulo = tituloInput.value.trim();
-    const id = videoIdInput.value.trim();
-    if(!titulo || !id){ alert('Preencha todos os campos'); return; }
+    // attach handlers
+    channelsListEl.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', e=>{
+      const i = Number(e.currentTarget.getAttribute('data-edit'));
+      const list = loadChannels();
+      const ch = list[i];
+      indexInput.value = i;
+      fields.name.value = ch.name||'';
+      fields.category.value = ch.category||'infantil';
+      fields.desc.value = ch.desc||'';
+      fields.thumb.value = ch.thumbnailUrl||'';
+      fields.videoId.value = ch.videoId||'';
+      fields.playlistId.value = ch.playlistId||'';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }));
 
-    const videos = loadVideos();
-    const idx = Number(editingIndex.value);
-    const videoObj = { titulo, id };
-
-    if(idx>=0){
-      videos[idx] = videoObj;
-    }else{
-      videos.push(videoObj);
-    }
-    saveVideos(videos);
-    clearForm();
-  });
-
-  cancelBtn.addEventListener('click', ()=>{
-    clearForm();
-  });
-
-  videosList.addEventListener('click',(e)=>{
-    const btn = e.target.closest('button');
-    if(!btn) return;
-    const action = btn.dataset.action;
-    const idx = Number(btn.dataset.index);
-    const videos = loadVideos();
-    if(action==='delete'){
-      if(confirm('Excluir este vídeo?')){
-        videos.splice(idx,1);
-        saveVideos(videos);
+    channelsListEl.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', e=>{
+      const i = Number(e.currentTarget.getAttribute('data-del'));
+      const list = loadChannels();
+      if(confirm('Excluir canal: ' + list[i].name + '?')){
+        list.splice(i,1);
+        saveChannels(list);
       }
-    }else if(action==='edit'){
-      tituloInput.value = videos[idx].titulo;
-      videoIdInput.value = videos[idx].id;
-      editingIndex.value = idx;
-      window.scrollTo({top:0, behavior:'smooth'});
-    }
-  });
-
-  function clearForm(){
-    tituloInput.value = '';
-    videoIdInput.value = '';
-    editingIndex.value = '-1';
+    }));
   }
 
-  // Inicializa lista
+  form.addEventListener('submit', (ev)=>{
+    ev.preventDefault();
+    const name = fields.name.value.trim();
+    if(!name){ alert('Informe o nome do canal'); return; }
+    const ch = {
+      category: fields.category.value,
+      name,
+      desc: fields.desc.value.trim(),
+      thumbnailUrl: fields.thumb.value.trim(),
+      videoId: fields.videoId.value.trim(),
+      playlistId: fields.playlistId.value.trim()
+    };
+    const list = loadChannels();
+    const idx = Number(indexInput.value || -1);
+    if(idx >= 0) list[idx] = ch; else list.push(ch);
+    saveChannels(list);
+    form.reset(); indexInput.value = '';
+  });
+
+  document.getElementById('clear-form').addEventListener('click', ()=>{ form.reset(); indexInput.value = ''; });
+
+  document.getElementById('export-json').addEventListener('click', ()=>{
+    const list = loadChannels();
+    const blob = new Blob([JSON.stringify(list, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'canais_clube_infantil.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('import-file').addEventListener('change', (ev)=>{
+    const f = ev.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = ()=>{
+      try{ const parsed = JSON.parse(r.result); if(!Array.isArray(parsed)) throw new Error('Arquivo inválido: deve ser um array'); if(!confirm('Substituir a lista atual?')) return; saveChannels(parsed.map(sanitize)); alert('Importado'); }
+      catch(e){ alert('Erro ao importar: '+e.message); }
+    }; r.readAsText(f); ev.target.value = '';
+  });
+
+  function sanitize(s){ return { category: s.category === 'evangelico' ? 'evangelico' : 'infantil', name: String(s.name||'').trim(), desc: String(s.desc||'').trim(), thumbnailUrl: String(s.thumbnailUrl||'').trim(), videoId: String(s.videoId||'').trim(), playlistId: String(s.playlistId||'').trim() }; }
+
+  document.getElementById('reset-defaults').addEventListener('click', ()=>{ if(!confirm('Resetar para padrão?')) return; saveChannels(defaultChannels.slice()); });
+
+  // init
   renderList();
 </script>
 
