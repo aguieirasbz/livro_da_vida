@@ -1,226 +1,150 @@
-<!doctype html>
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gerenciar Canais — Livro da Vida</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Olhar Rubro-Negro</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&display=swap" rel="stylesheet" />
-  <style>body{font-family:'Baloo 2',system-ui,Arial;background:#f6fbff;color:#10375C}</style>
+  <style>
+    body { font-family: Arial, sans-serif; background:#0f0f0f; color:#fff; }
+    header { background:#ff0000; padding:15px; text-align:center; font-size:1.5rem; font-weight:bold; margin-bottom:20px; }
+    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    input, button { font-size: 1rem; }
+    .video-item { display: flex; justify-content: space-between; gap:10px; background:#1c1c1c; padding:8px; border-radius:8px; margin-bottom:10px; align-items:center; }
+    .video-item img { width:120px; height:67px; border-radius:5px; }
+    .video-info { flex:1; margin-left:10px; }
+    .btn { padding:5px 10px; border-radius:5px; cursor:pointer; }
+    .btn-edit { background:#3b82f6; color:white; }
+    .btn-delete { background:#ef4444; color:white; }
+    .form-group { margin-bottom:10px; display:flex; flex-direction:column; gap:5px; }
+  </style>
 </head>
-<body class="min-h-screen">
-  <div class="max-w-4xl mx-auto p-6">
-    <header class="mb-6">
-      <h1 class="text-2xl font-bold">Gerenciar Canais</h1>
-      <p class="text-sm text-gray-600">Adicione, edite, importe ou exporte a lista de canais. Campos opcionais: thumbnail, videoId, playlistId.</p>
-      <div class="mt-2"><a href="index.html" class="text-sm text-blue-600 underline">Voltar para a página principal</a></div>
-    </header>
+<body>
 
-    <section class="bg-white rounded-xl p-4 shadow mb-6">
-      <form id="channel-form" class="grid gap-3">
-        <input type="hidden" id="editing-index" value="-1" />
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <input id="name" required placeholder="Nome do canal" class="p-2 border rounded" />
-          <select id="category" class="p-2 border rounded">
-            <option value="infantil">Infantil</option>
-            <option value="evangelico">Evangélico</option>
-          </select>
-        </div>
-        <input id="desc" placeholder="Descrição curta" class="p-2 border rounded" />
-        <input id="thumb" placeholder="URL da thumbnail (opcional)" class="p-2 border rounded" />
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <input id="videoId" placeholder="videoId (ex.: dQw4w9WgXcQ) — embute vídeo" class="p-2 border rounded" />
-          <input id="playlistId" placeholder="playlistId — embute playlist" class="p-2 border rounded" />
-        </div>
+<header>Admin - Gerenciar Vídeos</header>
 
+<div class="container">
+
+  <section class="mb-6">
+    <h2 class="text-xl font-bold mb-2">Adicionar / Editar Vídeo</h2>
+    <div class="form-group">
+      <label>Título:</label>
+      <input type="text" id="titulo" class="p-2 rounded text-black" placeholder="Título do vídeo">
+    </div>
+    <div class="form-group">
+      <label>ID do YouTube:</label>
+      <input type="text" id="videoId" class="p-2 rounded text-black" placeholder="Ex: dQw4w9WgXcQ">
+    </div>
+    <input type="hidden" id="editingIndex" value="-1">
+    <button id="saveBtn" class="btn btn-edit">Salvar Vídeo</button>
+    <button id="cancelBtn" class="btn btn-delete">Cancelar</button>
+  </section>
+
+  <section>
+    <h2 class="text-xl font-bold mb-2">Lista de Vídeos</h2>
+    <div id="videosList"></div>
+  </section>
+
+</div>
+
+<script>
+  const STORAGE_KEY = 'olhar_rubro_negro_videos';
+  const tituloInput = document.getElementById('titulo');
+  const videoIdInput = document.getElementById('videoId');
+  const editingIndex = document.getElementById('editingIndex');
+  const saveBtn = document.getElementById('saveBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const videosList = document.getElementById('videosList');
+
+  function loadVideos(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    }catch(e){ console.warn(e); return []; }
+  }
+
+  function saveVideos(videos){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
+    renderList();
+  }
+
+  function renderList(){
+    const videos = loadVideos();
+    videosList.innerHTML = '';
+    if(videos.length===0){
+      videosList.innerHTML = '<p>Nenhum vídeo cadastrado.</p>';
+      return;
+    }
+    videos.forEach((v,i)=>{
+      const div = document.createElement('div');
+      div.className = 'video-item';
+      div.innerHTML = `
+        <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg">
+        <div class="video-info">
+          <div>${v.titulo}</div>
+          <div class="text-sm text-gray-400">ID: ${v.id}</div>
+        </div>
         <div class="flex gap-2">
-          <button id="save-btn" class="px-4 py-2 bg-blue-600 text-white rounded">Salvar canal</button>
-          <button id="cancel-edit" type="button" class="px-4 py-2 bg-gray-200 rounded">Cancelar</button>
-          <button id="reset-defaults" type="button" class="ml-auto px-3 py-2 bg-yellow-100 rounded text-sm">Resetar para padrões</button>
+          <button class="btn btn-edit" data-index="${i}" data-action="edit">Editar</button>
+          <button class="btn btn-delete" data-index="${i}" data-action="delete">Excluir</button>
         </div>
-      </form>
-    </section>
+      `;
+      videosList.appendChild(div);
+    });
+  }
 
-    <section class="bg-white rounded-xl p-4 shadow mb-6">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="font-semibold">Lista de canais</h2>
-        <div class="flex items-center gap-2">
-          <button id="export-json" class="px-3 py-2 bg-green-600 text-white rounded text-sm">Exportar JSON</button>
-          <label class="px-3 py-2 bg-gray-100 rounded text-sm cursor-pointer">
-            Importar JSON
-            <input id="import-file" type="file" accept=".json,application/json" class="hidden" />
-          </label>
-        </div>
-      </div>
+  saveBtn.addEventListener('click', ()=>{
+    const titulo = tituloInput.value.trim();
+    const id = videoIdInput.value.trim();
+    if(!titulo || !id){ alert('Preencha todos os campos'); return; }
 
-      <div id="channels-list" class="space-y-2 text-sm"></div>
-    </section>
+    const videos = loadVideos();
+    const idx = Number(editingIndex.value);
+    const videoObj = { titulo, id };
 
-    <section class="text-xs text-gray-600">
-      <p class="mb-1"><strong>Observações:</strong></p>
-      <ul class="list-disc ml-5 space-y-1">
-        <li>Se fornecer videoId ou playlistId, o vídeo/playlist será embutido na página principal ao clicar no card.</li>
-        <li>Se não fornecer videoId/playlistId, o card abre pesquisa do YouTube como fallback.</li>
-        <li>Importar JSON substitui a lista atual. O arquivo deve ser um array de objetos: [{name,category,desc,thumb,videoId,playlistId}, ...]</li>
-      </ul>
-    </section>
-  </div>
-
-  <script>
-    const STORAGE_KEY = 'livro_da_vida_channels';
-    const defaultChannels = [
-      { category: 'infantil', name: 'Galinha Pintadinha', desc: 'Músicas e vídeos infantis animados' },
-      { category: 'infantil', name: 'Mundo Bita', desc: 'Canal com músicas educativas e personagens' },
-      { category: 'infantil', name: 'Turma da Mônica', desc: 'Histórias e músicas da Turma da Mônica' },
-      { category: 'infantil', name: 'Peppa Pig Brasil', desc: 'Episódios e músicas da Peppa' },
-      { category: 'evangelico', name: 'Canções Gospel Infantís', desc: 'Músicas cristãs para crianças (busca)' },
-      { category: 'evangelico', name: 'Música Cristã Infantil', desc: 'Louvores e histórias bíblicas para crianças' },
-      { category: 'evangelico', name: 'Histórias Bíblicas Infantis', desc: 'Narrativas bíblicas contadas para crianças' },
-      { category: 'evangelico', name: 'Canal Infantil Cristão', desc: 'Canal com conteúdo cristão para pequenos' }
-    ];
-
-    function loadChannels(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw) return structuredClone(defaultChannels);
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : structuredClone(defaultChannels);
-      }catch(e){ console.warn(e); return structuredClone(defaultChannels); }
+    if(idx>=0){
+      videos[idx] = videoObj;
+    }else{
+      videos.push(videoObj);
     }
+    saveVideos(videos);
+    clearForm();
+  });
 
-    function saveChannels(list){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-      populateList();
-    }
+  cancelBtn.addEventListener('click', ()=>{
+    clearForm();
+  });
 
-    // UI helpers
-    const form = document.getElementById('channel-form');
-    const fields = { name: document.getElementById('name'), category: document.getElementById('category'), desc: document.getElementById('desc'), thumb: document.getElementById('thumb'), videoId: document.getElementById('videoId'), playlistId: document.getElementById('playlistId') };
-    const editingIndex = document.getElementById('editing-index');
-    const channelsListEl = document.getElementById('channels-list');
-
-    function clearForm(){
-      form.reset();
-      editingIndex.value = '-1';
-    }
-
-    function populateList(){
-      const channels = loadChannels();
-      channelsListEl.innerHTML = '';
-      if(channels.length === 0){ channelsListEl.innerHTML = '<div class="text-gray-500">Nenhum canal cadastrado.</div>'; return; }
-      channels.forEach((ch, i) => {
-        const el = document.createElement('div');
-        el.className = 'p-2 border rounded flex items-start gap-3';
-        el.innerHTML = `
-          <div class="w-14 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-            ${ch.thumb ? `<img src="${escapeHtml(ch.thumb)}" alt="" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-xs text-gray-500">${escapeHtml(ch.name)}</div>`}
-          </div>
-          <div class="flex-1">
-            <div class="font-semibold">${escapeHtml(ch.name)} <span class="text-xs text-gray-400">(${escapeHtml(ch.category)})</span></div>
-            <div class="text-xs text-gray-600">${escapeHtml(ch.desc || '')}</div>
-            <div class="text-xs text-gray-500 mt-1">videoId: ${escapeHtml(ch.videoId || '-') } • playlistId: ${escapeHtml(ch.playlistId || '-')}</div>
-          </div>
-          <div class="flex flex-col gap-2">
-            <button data-action="edit" data-index="${i}" class="px-2 py-1 bg-blue-600 text-white text-xs rounded">Editar</button>
-            <button data-action="delete" data-index="${i}" class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Excluir</button>
-          </div>`;
-        channelsListEl.appendChild(el);
-      });
-    }
-
-    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-    // Form submit - add or update
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const list = loadChannels();
-      const item = { category: fields.category.value, name: fields.name.value.trim(), desc: fields.desc.value.trim(), thumb: fields.thumb.value.trim(), videoId: fields.videoId.value.trim(), playlistId: fields.playlistId.value.trim() };
-      const idx = Number(editingIndex.value);
-      if(idx >= 0){
-        list[idx] = item;
-      }else{
-        list.push(item);
+  videosList.addEventListener('click',(e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    const action = btn.dataset.action;
+    const idx = Number(btn.dataset.index);
+    const videos = loadVideos();
+    if(action==='delete'){
+      if(confirm('Excluir este vídeo?')){
+        videos.splice(idx,1);
+        saveVideos(videos);
       }
-      saveChannels(list);
-      clearForm();
-    });
-
-    // Clicks on edit/delete
-    channelsListEl.addEventListener('click', (e) => {
-      const btn = e.target.closest('button');
-      if(!btn) return;
-      const action = btn.dataset.action;
-      const idx = Number(btn.dataset.index);
-      const list = loadChannels();
-      if(action === 'delete'){
-        if(!confirm('Excluir este canal?')) return;
-        list.splice(idx,1);
-        saveChannels(list);
-      }else if(action === 'edit'){
-        const ch = list[idx];
-        fields.name.value = ch.name || '';
-        fields.category.value = ch.category || 'infantil';
-        fields.desc.value = ch.desc || '';
-        fields.thumb.value = ch.thumb || '';
-        fields.videoId.value = ch.videoId || '';
-        fields.playlistId.value = ch.playlistId || '';
-        editingIndex.value = String(idx);
-        window.scrollTo({top:0,behavior:'smooth'});
-      }
-    });
-
-    // Cancel edit
-    document.getElementById('cancel-edit').addEventListener('click', (e) => { e.preventDefault(); clearForm(); });
-
-    // Export JSON
-    document.getElementById('export-json').addEventListener('click', () => {
-      const data = JSON.stringify(loadChannels(), null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'livro_da_vida_canais.json';
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-    });
-
-    // Import JSON
-    document.getElementById('import-file').addEventListener('change', (e) => {
-      const f = e.target.files[0];
-      if(!f) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try{
-          const parsed = JSON.parse(reader.result);
-          if(!Array.isArray(parsed)) throw new Error('Arquivo inválido: deve ser um array.');
-          if(!confirm('Importar substituirá a lista atual. Continuar?')) return;
-          saveChannels(parsed.map(sanitizeChannel));
-          alert('Importação concluída.');
-        }catch(err){ alert('Erro ao importar JSON: ' + (err.message||err)); }
-      };
-      reader.readAsText(f);
-      e.target.value = '';
-    });
-
-    function sanitizeChannel(src){
-      return {
-        category: src.category === 'evangelico' ? 'evangelico' : 'infantil',
-        name: String(src.name||'').trim(),
-        desc: String(src.desc||'').trim(),
-        thumb: String(src.thumb||'').trim(),
-        videoId: String(src.videoId||'').trim(),
-        playlistId: String(src.playlistId||'').trim()
-      };
+    }else if(action==='edit'){
+      tituloInput.value = videos[idx].titulo;
+      videoIdInput.value = videos[idx].id;
+      editingIndex.value = idx;
+      window.scrollTo({top:0, behavior:'smooth'});
     }
+  });
 
-    // Reset to defaults
-    document.getElementById('reset-defaults').addEventListener('click', () => {
-      if(!confirm('Restaurar os canais padrão? Isso substituirá a lista atual.')) return;
-      saveChannels(structuredClone(defaultChannels));
-    });
+  function clearForm(){
+    tituloInput.value = '';
+    videoIdInput.value = '';
+    editingIndex.value = '-1';
+  }
 
-    // Init
-    populateList();
-  </script>
+  // Inicializa lista
+  renderList();
+</script>
+
 </body>
 </html>
