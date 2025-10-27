@@ -3,74 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Livro da Vida - Player</title>
+<title>Livro da Vida- Player</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   body { font-family: Arial, sans-serif; margin:0; background:#000; color:#fff; }
   header { background:#006eff; padding:15px; text-align:center; font-size:1.5rem; font-weight:bold; }
-  
-  .container {
-    display:flex;
-    flex-direction: row;
-    max-width:1200px;
-    margin:20px auto;
-    gap:10px;
-    padding: 0 10px;
-  }
-
+  .container { display:flex; max-width:1200px; margin:20px auto; gap:10px; }
   .player { flex:3; }
   .sidebar { flex:1; overflow-y:auto; max-height:80vh; }
-
-  .video-thumb {
-    display:flex; gap:10px; padding:5px; cursor:pointer; 
-    align-items:center; border-radius:8px; transition:background 0.2s;
-  }
+  .video-thumb { display:flex; gap:10px; padding:5px; cursor:pointer; align-items:center; border-radius:8px; transition:background 0.2s; }
   .video-thumb:hover { background:#222; }
   .video-thumb img { width:120px; height:67px; border-radius:5px; }
   .video-info { flex:1; }
-
-  /* 🌟 Responsividade */
-  @media (max-width: 768px) {
-    .container {
-      flex-direction: column;
-      max-width: 100%;
-    }
-    .sidebar {
-      order: 2;
-      max-height: none;
-      flex: none;
-    }
-    .player {
-      order: 1;
-      width: 100%;
-    }
-    .video-thumb img {
-      width: 100px;
-      height: 56px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    header { font-size: 1.2rem; }
-    .video-thumb img {
-      width: 90px;
-      height: 50px;
-    }
-    .video-info div:first-child {
-      font-size: 0.9rem;
-    }
-  }
 </style>
 </head>
 
+
+
 <body>
 
-<header>📖 Livro da Vida</header>
+<header>Livro da Vida</header>
 
 <div class="container">
   <div class="player">
     <div id="main-player" class="w-full aspect-video bg-black flex items-center justify-center">
-      <span>Selecione um vídeo abaixo</span>
+      <span>Selecione um vídeo à direita</span>
     </div>
   </div>
   <div class="sidebar" id="videos-sidebar"></div>
@@ -94,32 +51,31 @@ function renderSidebar(){
   const videos = loadVideos();
   sidebar.innerHTML = '';
   if(videos.length===0){
-    sidebar.innerHTML = '<p class="text-gray-400 text-center p-4">Nenhum vídeo cadastrado. Use o admin.html para adicionar.</p>';
+    sidebar.innerHTML = '<p>Nenhum vídeo cadastrado. Use o admin.html para adicionar.</p>';
     return;
   }
-  videos.forEach((v)=>{
+  videos.forEach((v,i)=>{
     const div = document.createElement('div');
     div.className = 'video-thumb';
     div.innerHTML = `
-      <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="thumb">
+      <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg">
       <div class="video-info">
         <div>${v.titulo}</div>
         <div class="text-sm text-gray-400">ID: ${v.id}</div>
       </div>
     `;
-    div.addEventListener('click', ()=> playVideo(v.id));
+    div.addEventListener('click', ()=>{
+      playVideo(v.id);
+    });
     sidebar.appendChild(div);
   });
 }
 
 function playVideo(videoId){
-  playerDiv.innerHTML = `
-    <iframe class="w-full h-full rounded-xl"
-      src="https://www.youtube.com/embed/${videoId}?autoplay=1"
-      frameborder="0" allow="accelerometer; autoplay; clipboard-write;
-      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+  playerDiv.innerHTML = `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
 }
 
+// Inicializa sidebar
 renderSidebar();
 </script>
 
