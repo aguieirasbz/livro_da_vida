@@ -3,28 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Livro da Vida- Player</title>
+<title>Livro da Vida - Canais Infantis</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body { font-family: Arial, sans-serif; margin:0; background:#000; color:#fff; }
-  header { background:#ff0000; padding:15px; text-align:center; font-size:1.5rem; font-weight:bold; }
+  body { font-family: 'Baloo 2', Arial, sans-serif; margin:0; background:#f0f8ff; color:#10375C; }
   .container { display:flex; max-width:1200px; margin:20px auto; gap:10px; }
   .player { flex:3; }
   .sidebar { flex:1; overflow-y:auto; max-height:80vh; }
-  .video-thumb { display:flex; gap:10px; padding:5px; cursor:pointer; align-items:center; border-radius:8px; transition:background 0.2s; }
-  .video-thumb:hover { background:#222; }
-  .video-thumb img { width:120px; height:67px; border-radius:5px; }
-  .video-info { flex:1; }
+  .video-thumb { display:flex; gap:10px; padding:5px; cursor:pointer; align-items:center; border-radius:8px; transition:background 0.2s; background:#fff; }
+  .video-thumb:hover { background:#e0f0ff; }
+  .video-thumb img { width:120px; height:67px; border-radius:5px; object-fit:cover; }
+  .video-info { flex:1; font-size:0.9rem; }
+  header { position:relative; width:100%; height:200px; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  header img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter: brightness(0.7); }
+  header .header-text { position:relative; z-index:10; text-align:center; color:#fff; }
+  header .header-text h1 { font-size:2rem; font-weight:bold; text-shadow: 2px 2px 6px rgba(0,0,0,0.5); }
+  header .header-text p { font-size:1rem; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); }
 </style>
 </head>
 <body>
 
-<header>Livro da Vida</header>
+<header>
+  <img src="https://i.ibb.co/8r2nZfX/canais-infantis-bg.jpg" alt="Canais Infantis">
+  <div class="header-text">
+    <h1>Livro da Vida</h1>
+    <p>Canais Infantis Selecionados</p>
+  </div>
+</header>
 
 <div class="container">
   <div class="player">
-    <div id="main-player" class="w-full aspect-video bg-black flex items-center justify-center">
-      <span>Selecione um vídeo à direita</span>
+    <div id="main-player" class="w-full aspect-video bg-black flex items-center justify-center rounded-lg shadow-lg">
+      <span>Selecione vídeo à direita</span>
     </div>
   </div>
   <div class="sidebar" id="videos-sidebar"></div>
@@ -57,19 +67,17 @@ function renderSidebar(){
     div.innerHTML = `
       <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg">
       <div class="video-info">
-        <div>${v.titulo}</div>
-        <div class="text-sm text-gray-400">ID: ${v.id}</div>
+        <div class="font-semibold">${v.titulo}</div>
+        <div class="text-gray-500 text-xs">ID: ${v.id}</div>
       </div>
     `;
-    div.addEventListener('click', ()=>{
-      playVideo(v.id);
-    });
+    div.addEventListener('click', ()=>{ playVideo(v.id); });
     sidebar.appendChild(div);
   });
 }
 
 function playVideo(videoId){
-  playerDiv.innerHTML = `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+  playerDiv.innerHTML = `<iframe class="w-full h-full rounded-lg" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
 }
 
 // Inicializa sidebar
