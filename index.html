@@ -121,27 +121,29 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'olhar_rubro_negro_videos';
 const playerDiv = document.getElementById('main-player');
 const sidebar = document.getElementById('videos-sidebar');
 
-function loadVideos() {
+async function loadVideos() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const response = await fetch('videos.json');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const videos = await response.json();
+    return Array.isArray(videos) ? videos : [];
   } catch (e) {
-    console.warn(e);
+    console.error("Erro ao carregar vídeos:", e);
+    sidebar.innerHTML = '<p class="text-red-500 text-center p-4">Erro ao carregar a lista de vídeos. Verifique o console para mais detalhes.</p>';
     return [];
   }
 }
 
-function renderSidebar() {
-  const videos = loadVideos();
+async function renderSidebar() {
+  const videos = await loadVideos();
   sidebar.innerHTML = '';
-  if (videos.length === 0) {
-    sidebar.innerHTML = '<p class="text-gray-400 text-center p-4">Nenhum vídeo cadastrado. Use o admin.html para adicionar.</p>';
+  if (videos.length === 0 && sidebar.innerHTML === '') {
+    sidebar.innerHTML = '<p class="text-gray-400 text-center p-4">Nenhum vídeo encontrado.</p>';
     return;
   }
 
@@ -158,6 +160,10 @@ function renderSidebar() {
     div.addEventListener('click', () => playVideo(v.id));
     sidebar.appendChild(div);
   });
+  
+  if (videos.length > 0) {
+    playVideo(videos[0].id);
+  }
 }
 
 function playVideo(videoId) {
